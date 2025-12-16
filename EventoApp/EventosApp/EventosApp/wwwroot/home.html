@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inicio</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header class="top-bar">
+        <div class="logo">Portal de Eventos UTP</div>
+        <div class="user-actions">
+            <span id="userInfo"></span>
+            <button id="adminBtn" class="btn-admin" style="display:none">
+                Panel Admin
+            </button>
+            <button id="logoutBtn" class="btn-logout">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <h2>Eventos Disponibles</h2>
+
+        <div class="search-section">
+            <input type="text" id="searchTitle" placeholder="Buscar por título">
+        </div>
+
+        <div class="filters-section">
+            <input type="text" id="filterType" placeholder="Filtrar por tipo">
+            <label>Desde: </label>
+            <input type="date" id="dateFrom">
+            <label>Hasta: </label>
+            <input type="date" id="dateTo">
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="onlyMyEvents">
+                <label for="onlyMyEvents">Mis eventos</label>
+            </div>
+
+            <button id="btnFiltrar" class="btn-primary">Filtrar</button>
+            <button id="btnLimpiar" class="btn-secondary">Limpiar</button>
+        </div>
+
+        <div id="list"></div>
+    </main>
+
+    <script src="js/home.js"></script>
+</body>
+</html>
+
+

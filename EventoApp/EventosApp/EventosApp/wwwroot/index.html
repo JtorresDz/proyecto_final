@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Eventos Disponibles</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <header class="top-bar">
+        <div class="logo">Portal de Eventos UTP</div>
+
+        <div class="nav-actions">
+            <a href="login.html" class="btn btn-primary">Login</a>
+            <a href="register.html" class="btn btn-success">Registrarse</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <h2>Eventos Disponibles</h2>
+
+        <div class="search-section">
+            <input type="text" id="searchTitle" placeholder="Buscar por título">
+        </div>
+
+        <div class="filters-section">
+            <input type="text" id="filterType" placeholder="Filtrar por tipo">
+            <label>Desde: </label>
+            <input type="date" id="dateFrom">
+            <label>Hasta: </label>
+            <input type="date" id="dateTo">
+
+            <button id="btnFiltrar" class="btn-primary">Filtrar</button>
+            <button id="btnLimpiar" class="btn-secondary">Limpiar</button>
+        </div>
+
+
+        <div id="list"></div>
+    </main>
+
+    <script>
+        let allEvents = [];
+
+        fetch('/api/events/list')
+            .then(res => res.json())
+            .then(events => {
+                allEvents = events;
+                renderEvents(events); 
+            });
+
+        function renderEvents(events) {
+            const list = document.getElementById('list');
+            list.innerHTML = '';
+
+            if (events.length === 0) {
+                list.innerHTML = "<p>No hay eventos que coincidan con el filtro.</p>";
+                return;
+            }
+
+            events.forEach(e => {
+                list.innerHTML += `
+            <div class="event">
+                <h3>${e.title}</h3>
+                <p>${e.description ?? ''}</p>
+                <p><strong>Tipo:</strong> ${e.tipo}</p>
+                <p><strong>Localización:</strong> ${e.localizacion}</p>
+                <p><strong>Inicia:</strong> ${new Date(e.startDate).toLocaleString()}</p>
+                <p><strong>Termina:</strong>
+                    ${e.finalDate ? new Date(e.finalDate).toLocaleString() : 'No definido'}
+                </p>
+                <p><strong>Inscritos:</strong> ${e.inscritos}</p>
+
+                <button class="btn-primary" onclick="goLogin()">
+                    Registrarse al evento
+                </button>
+            </div>
+        `;
+            });
+        }
+
+        function applyFilters() {
+            const title = document.getElementById('searchTitle').value.toLowerCase();
+            const type = document.getElementById('filterType').value.toLowerCase();
+            const from = document.getElementById('dateFrom').value;
+            const to = document.getElementById('dateTo').value;
+
+            const filtered = allEvents.filter(e => {
+                if (title && !e.title.toLowerCase().includes(title)) return false;
+                if (type && !e.tipo.toLowerCase().includes(type)) return false;
+
+                if (from && new Date(e.startDate) < new Date(from)) return false;
+                if (to && e.finalDate && new Date(e.finalDate) > new Date(to)) return false;
+
+                return true;
+            });
+
+            renderEvents(filtered);
+        }
+
+        function clearFilters() {
+            document.getElementById('searchTitle').value = '';
+            document.getElementById('filterType').value = '';
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            renderEvents(allEvents);
+        }
+
+
+        document.getElementById('btnFiltrar').addEventListener('click', applyFilters);
+        document.getElementById('btnLimpiar').addEventListener('click', clearFilters);
+
+        document.getElementById('searchTitle').addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyFilters();
+            }
+        });
+
+        function goLogin() {
+            alert("Debes iniciar sesión para registrarte en un evento");
+            location.href = "login.html";
+        }
+    </script>
+
+</body>
+</html>

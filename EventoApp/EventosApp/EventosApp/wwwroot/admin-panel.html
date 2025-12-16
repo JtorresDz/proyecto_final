@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Administrador</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header class="top-bar">
+        <div class="logo">Portal de Eventos UTP</div>
+        <div class="user-actions">
+            <button class="btn-secondary" onclick="goBack()">Volver</button>
+            <button class="btn-primary" onclick="goNewEvent()">Nuevo evento</button>
+            <button class="btn-logout" onclick="logout()">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <h2>Mis Eventos</h2>
+        <div id="list"></div>
+    </main>
+
+    <script>
+        if (sessionStorage.getItem('isAdmin') !== 'true') {
+            alert('Acceso denegado');
+            location.href = 'index.html';
+        }
+        function goBack() {
+            location.href = 'home.html';
+        }
+
+        function goNewEvent() {
+            location.href = 'events.html';
+        }
+
+        function logout() {
+            sessionStorage.clear();
+            location.href = 'index.html';
+        }
+
+        function load() {
+            fetch('/api/admin/events')
+                .then(r => {
+                    if (!r.ok) throw new Error('No autorizado');
+                    return r.json();
+                })
+                .then(events => {
+                    const list = document.getElementById('list');
+                    list.innerHTML = '';
+
+                    if (events.length === 0) {
+                        list.innerHTML = '<p>No has creado eventos aún.</p>';
+                        return;
+                    }
+
+                    events.forEach(e => {
+                        list.innerHTML += `
+                            <div class="card">
+                                <h3>${e.title}</h3>
+
+                                <p>${e.description ?? ''}</p>
+
+                                <p><strong>Tipo:</strong> ${e.eventType}</p>
+                                <p><strong>Localización:</strong> ${e.localizacion}</p>
+
+                                <p>
+                                    <strong>Inicio:</strong>
+                                    ${new Date(e.startDate).toLocaleString()}
+                                </p>
+
+                                <p>
+                                    <strong>Final:</strong>
+                                    ${e.finalDate
+                                ? new Date(e.finalDate).toLocaleString()
+                                : 'No definido'}
+                                </p>
+
+                                <p><strong>Inscritos:</strong> ${e.inscritos}</p>
+
+                                <div class="actions">
+                                    <button class="btn-primary" onclick="edit(${e.id})">
+                                        Editar
+                                    </button>
+
+                                    <button class="btn-danger" onclick="del(${e.id})">
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </div>
+        `;
+                    });
+
+                })
+                .catch(() => {
+                    alert('Sesión inválida');
+                    location.href = 'login.html';
+                });
+        }
+
+        function edit(id) {
+            sessionStorage.setItem('editEventId', id);
+            location.href = 'events.html';
+        }
+
+        function del(id) {
+            if (!confirm('¿Eliminar este evento?')) return;
+
+            fetch('/api/admin/events/' + id, {
+                method: 'DELETE'
+            })
+                .then(r => {
+                    if (!r.ok) {
+                        alert('No puedes eliminar este evento');
+                        return;
+                    }
+                    load();
+                });
+        }
+
+        load();
+    </script>
+
+</body>
+</html>
+
+

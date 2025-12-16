@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Evento</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <header class="top-bar">
+        <div class="logo">Portal de Eventos UTP</div>
+        <div class="user-actions">
+            <button onclick="goBack()" class="btn-secondary">Volver</button>
+            <button onclick="logout()" class="btn-logout">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <h2 id="formTitle">Crear nuevo evento</h2>
+
+        <form id="eventForm">
+            <input type="text" id="titulo" placeholder="Título" required>
+            <input type="text" id="descripcion" placeholder="Descripción" required>
+            <input type="text" id="tipo" placeholder="Tipo de evento" required>
+            <input type="text" id="localizacion" placeholder="Localización" required>
+
+            <label>Inicio</label>
+            <input type="date" id="inicio" required>
+
+            <label>Final</label>
+            <input type="date" id="final" required>
+
+            <button type="submit" class="btn-primary">
+                Guardar evento
+            </button>
+        </form>
+    </main>
+
+    <script>
+
+    if (sessionStorage.getItem('isAdmin') !== 'true') {
+        alert('Acceso denegado');
+        location.href = 'home.html';
+    }
+
+    const editId = sessionStorage.getItem('editEventId');
+
+    if (editId) {
+        document.getElementById('formTitle').innerText = 'Editar evento';
+        loadEvent(editId);
+    }
+
+    function goBack() {
+        sessionStorage.removeItem('editEventId');
+        location.href = 'admin-panel.html';
+    }
+
+    function logout() {
+        sessionStorage.clear();
+        location.href = 'login.html';
+    }
+
+    async function loadEvent(id) {
+        const res = await fetch('/api/admin/events');
+        const events = await res.json();
+        const e = events.find(x => x.id == id);
+
+        if (!e) {
+            alert('Evento no encontrado');
+            goBack();
+            return;
+        }
+
+        titulo.value = e.title;
+        descripcion.value = e.description;
+        tipo.value = e.eventType;
+        inicio.value = e.startDate.split('T')[0];
+        localizacion.value = e.localizacion ?? '';
+    }
+
+    eventForm.onsubmit = async (ev) => {
+        ev.preventDefault();
+
+        const data = {
+            titulo: titulo.value,
+            descripcion: descripcion.value,
+            tipo: tipo.value,
+            localizacion: localizacion.value,
+            inicio: inicio.value,
+            final: final.value || null
+        };
+
+        let res;
+
+        if (editId) {
+            res = await fetch('/api/admin/events/' + editId, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+        } else {
+            res = await fetch('/api/admin/events', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+        }
+
+        if (!res.ok) {
+            alert('Error al guardar el evento');
+            return;
+        }
+
+        sessionStorage.removeItem('editEventId');
+        location.href = 'admin-panel.html';
+    };
+    </script>
+
+</body>
+</html>
